@@ -1,0 +1,40 @@
+// {
+//   "compilerOptions": {
+//     "target": "es6",
+//     "module": "commonjs",
+//     "lib": ["esnext", "dom"],
+//     "declaration": true,
+//     "outDir": "lib",
+//     "strict": true,
+//     "noImplicitAny": false,
+//     "types": ["node"],
+//     "esModuleInterop": true,
+//     "resolveJsonModule": true,
+//     "baseUrl": "./",
+//     "paths": {
+//       "@/*": ["src/*"]
+//     },
+//     "typeRoots": ["./node_modules/@types", "./src/typings"]
+//   },
+//   "include": ["src/**/*"],
+//   "exclude": ["node_modules", "dist", "lib"]
+// }
+{
+  "compilerOptions": {
+    "strict": true,
+    "outDir": "lib",
+    "target": "es6",
+    "sourceMap": true,
+    "declaration": true,
+    "lib": ["esnext", "dom"],
+    "module": "commonjs",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": false
+  },
+  "include": ["src"]
+}

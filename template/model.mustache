@@ -1,0 +1,20 @@
+import * as models from './'
+
+{{#model}}
+{{#description}}
+/**
+ * {{&description}}
+ */
+{{/description}}
+export interface {{&className}}{{#parent}} extends {{{parent}}} {{/parent}} {
+{{#properties}}
+  {{#description}}
+  /**
+   * {{&description}}
+   */
+  {{/description}}
+  {{name}}{{^required}}?{{/required}}: {{&type}}
+
+{{/properties}}
+}
+{{/model}}
