@@ -20,8 +20,10 @@ async function main() {
       apiUrl: program.apiUrl as string,
       apiPaths: program.apiPaths as string,
       basePath: program.basePath as string,
-      templateDir: (program.templateDir as string) || path.join(__dirname, '..', 'template'),
-      outputDir: (program.outputDir as string) || path.join(process.cwd(), 'dist'),
+      templateDir: program.templateDir
+        ? path.join(process.cwd(), program.templateDir)
+        : path.join(__dirname, '..', 'template'),
+      outputDir: program.outputDir ? path.join(process.cwd(), program.outputDir) : path.join(process.cwd(), 'dist'),
     }
 
     const codeGen = CodeGen.create(genConfig)

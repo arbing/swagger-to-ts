@@ -126,7 +126,7 @@ export class CodeGen {
 
       const outputDir = path.join(this.#config.outputDir)
       if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir)
+        fs.mkdirSync(outputDir, { recursive: true })
       }
       const fileOptions = { encoding: 'utf-8' }
 
@@ -457,8 +457,8 @@ export class CodeGen {
     int32: 'number',
     int64: 'number',
     number: 'number',
-    'date-time': 'Date',
-    Date: 'Date',
+    'date-time': 'number',
+    Date: 'number',
     array: 'Array',
     Array: 'Array',
     List: 'Array',
@@ -524,9 +524,9 @@ export class CodeGen {
   }
 
   private async genApis() {
-    const apisPath = path.join(this.#config.outputDir)
-    if (!fs.existsSync(apisPath)) {
-      fs.mkdirSync(apisPath)
+    const apisDir = path.join(this.#config.outputDir)
+    if (!fs.existsSync(apisDir)) {
+      fs.mkdirSync(apisDir, { recursive: true })
     }
 
     const fileOptions = { encoding: 'utf-8' }
@@ -545,7 +545,7 @@ export class CodeGen {
       console.log(`[INFO]: 生成 api..., apiName: ${api.name}, operations: ${operations.length}`)
 
       const text = Mustache.render(apiTemplate, { api, operations })
-      fs.writeFileSync(path.join(apisPath, `${api.name}.ts`), text, fileOptions)
+      fs.writeFileSync(path.join(apisDir, `${api.name}.ts`), text, fileOptions)
     }
 
     const apisTemplatePath = path.join(this.#config.templateDir, 'apis.mustache')
@@ -554,7 +554,7 @@ export class CodeGen {
     }
     const apisTemplate = fs.readFileSync(apisTemplatePath, fileOptions)
     const text = Mustache.render(apisTemplate, { apis: apis })
-    fs.writeFileSync(path.join(apisPath, `index.ts`), text, fileOptions)
+    fs.writeFileSync(path.join(apisDir, `index.ts`), text, fileOptions)
 
     console.log(
       chalk.green(`[INFO]: 生成 api 成功, apis: ${apis.length}, total operations: ${this.#operations.length}`),
@@ -562,9 +562,9 @@ export class CodeGen {
   }
 
   private async genModels() {
-    const modelsPath = path.join(this.#config.outputDir, 'models')
-    if (!fs.existsSync(modelsPath)) {
-      fs.mkdirSync(modelsPath)
+    const modelsDir = path.join(this.#config.outputDir, 'models')
+    if (!fs.existsSync(modelsDir)) {
+      fs.mkdirSync(modelsDir, { recursive: true })
     }
 
     const fileOptions = { encoding: 'utf-8' }
@@ -579,7 +579,7 @@ export class CodeGen {
     for (const model of models) {
       model.properties = toViewDataList(model.properties)
       const text = Mustache.render(modelTemplate, { model })
-      fs.writeFileSync(path.join(modelsPath, `${model.name}.ts`), text, fileOptions)
+      fs.writeFileSync(path.join(modelsDir, `${model.name}.ts`), text, fileOptions)
     }
 
     const modelsTemplatePath = path.join(this.#config.templateDir, 'models.mustache')
@@ -588,7 +588,7 @@ export class CodeGen {
     }
     const modelsTemplate = fs.readFileSync(path.join(this.#config.templateDir, 'models.mustache'), fileOptions)
     const text = Mustache.render(modelsTemplate, { models: models })
-    fs.writeFileSync(path.join(modelsPath, `index.ts`), text, fileOptions)
+    fs.writeFileSync(path.join(modelsDir, `index.ts`), text, fileOptions)
 
     console.log(chalk.green(`[INFO]: 生成 model 成功, models: ${models.length}`))
   }
