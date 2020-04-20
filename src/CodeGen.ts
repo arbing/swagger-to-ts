@@ -57,6 +57,24 @@ interface PropertyDef {
   required?: boolean
 }
 
+interface ViewModel extends Record<string, any> {
+  '-first'?: boolean
+  '-last'?: boolean
+}
+
+function toViewDataList<T extends Record<string, any>>(list: Array<T & ViewModel>) {
+  for (let index = 0; index < list.length; index++) {
+    const item = list[index] as T & ViewModel
+    if (index === 0) {
+      item['-first'] = true
+    }
+    if (index === list.length - 1) {
+      item['-last'] = true
+    }
+  }
+  return list
+}
+
 function capitalizeFirstLetter(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
@@ -294,21 +312,44 @@ export class CodeGen {
             type = this.resolveReferenceType(prop as OpenAPIV2.ReferenceObject) as string
           }
 
-          if (isGenericType && type && genericTypes.includes(type)) {
-            type = 'T'
+          if (isGenericType) {
+            if (type && genericTypes.includes(type)) {
+              type = 'T'
+            }
           }
         } else if (prop.additionalProperties) {
           const propAddProperties = prop.additionalProperties as IJsonSchema
           if ('items' in propAddProperties && propAddProperties.items) {
-            const propAdd = propAddProperties.items as OpenAPIV2.ItemsObject
-            if (propAdd.$ref && propAdd.$ref !== ref) {
-              // 递归处理Model
-              this.resolveReferenceType(propAdd as OpenAPIV2.ReferenceObject) as string
+            const propAddItems = propAddProperties.items as OpenAPIV2.ItemsObject
+            if (propAddItems.$ref) {
+              if (propAddItems.$ref !== ref) {
+                // 递归处理Model
+                this.resolveReferenceType(propAddItems as OpenAPIV2.ReferenceObject) as string
+              }
             }
           }
 
           if (isGenericType) {
             type = 'T'
+          }
+        } else if (prop.items) {
+          const propItems = prop.items as OpenAPIV2.ItemsObject
+          if (propItems.$ref) {
+            if (propItems.$ref !== ref) {
+              // 递归处理Model
+              this.resolveReferenceType(propItems as OpenAPIV2.ReferenceObject) as string
+            }
+
+            const propType = this.getRefKey(propItems.$ref)
+            if (isGenericType) {
+              if (genericTypes.includes(propType)) {
+                type = type.replace(new RegExp(propType, 'g'), 'T')
+              }
+            }
+          } else if (propItems.type === 'object') {
+            if (isGenericType) {
+              type = 'T'
+            }
           }
         }
 
@@ -415,14 +456,19 @@ export class CodeGen {
     int: 'number',
     int32: 'number',
     int64: 'number',
+    number: 'number',
     'date-time': 'Date',
     Date: 'Date',
-    number: 'number',
     array: 'Array',
     Array: 'Array',
     List: 'Array',
     Map: 'Map',
+    object: 'object',
+    Object: 'object',
     T: 'T',
+    T1: 'T1',
+    T2: 'T2',
+    T3: 'T3',
   }
 
   private isBuiltinType(type: string) {
@@ -490,15 +536,16 @@ export class CodeGen {
     }
     const apiTemplate = fs.readFileSync(apiTemplatePath, fileOptions)
 
-    const apis = [...this.#apis]
-    apis.sort()
-    for (const apiName of apis) {
-      const operations = this.#operations.filter((d) => d.apiName === apiName)
+    const apiNames = [...this.#apis]
+    apiNames.sort()
+    const apis = toViewDataList(apiNames.map((d) => ({ name: d })))
+    for (const api of apis) {
+      const operations = toViewDataList(this.#operations.filter((d) => d.apiName === api.name))
 
-      console.log(`[INFO]: 生成 api..., apiName: ${apiName}, operations: ${operations.length}`)
+      console.log(`[INFO]: 生成 api..., apiName: ${api.name}, operations: ${operations.length}`)
 
-      const text = Mustache.render(apiTemplate, { apiName, operations })
-      fs.writeFileSync(path.join(apisPath, `${apiName}.ts`), text, fileOptions)
+      const text = Mustache.render(apiTemplate, { api, operations })
+      fs.writeFileSync(path.join(apisPath, `${api.name}.ts`), text, fileOptions)
     }
 
     const apisTemplatePath = path.join(this.#config.templateDir, 'apis.mustache')
@@ -506,7 +553,7 @@ export class CodeGen {
       throw new Error(`[ERROR]: 模版文件 ${apisTemplatePath} 不存在`)
     }
     const apisTemplate = fs.readFileSync(apisTemplatePath, fileOptions)
-    const text = Mustache.render(apisTemplate, { apis: [...this.#apis] })
+    const text = Mustache.render(apisTemplate, { apis: apis })
     fs.writeFileSync(path.join(apisPath, `index.ts`), text, fileOptions)
 
     console.log(
@@ -528,7 +575,9 @@ export class CodeGen {
     const modelTemplate = fs.readFileSync(path.join(this.#config.templateDir, 'model.mustache'), fileOptions)
 
     this.#models.sort((a, b) => a.name.localeCompare(b.name))
-    for (const model of this.#models) {
+    const models = toViewDataList(this.#models)
+    for (const model of models) {
+      model.properties = toViewDataList(model.properties)
       const text = Mustache.render(modelTemplate, { model })
       fs.writeFileSync(path.join(modelsPath, `${model.name}.ts`), text, fileOptions)
     }
@@ -538,9 +587,9 @@ export class CodeGen {
       throw new Error(`[ERROR]: 模版文件 ${modelsTemplatePath} 不存在`)
     }
     const modelsTemplate = fs.readFileSync(path.join(this.#config.templateDir, 'models.mustache'), fileOptions)
-    const text = Mustache.render(modelsTemplate, { models: this.#models })
+    const text = Mustache.render(modelsTemplate, { models: models })
     fs.writeFileSync(path.join(modelsPath, `index.ts`), text, fileOptions)
 
-    console.log(chalk.green(`[INFO]: 生成 model 成功, models: ${this.#models.length}`))
+    console.log(chalk.green(`[INFO]: 生成 model 成功, models: ${models.length}`))
   }
 }

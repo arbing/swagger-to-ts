@@ -1,5 +1,5 @@
 {{#apis}}
-import * as {{.}} from './{{.}}'
+import * as {{name}} from './{{name}}'
 {{/apis}}
 
-export { {{#apis}}{{.}}, {{/apis}} }
+export { {{#apis}}{{name}}{{^-last}}, {{/-last}}{{/apis}} }

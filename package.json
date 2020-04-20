@@ -1,6 +1,6 @@
 {
   "name": "swagger-to-ts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Generate typescript services and models from Swagger",
   "main": "./lib/index.js",
   "bin": {
@@ -12,8 +12,8 @@
   ],
   "scripts": {
     "clear": "rm -rf ./dist",
-    "dev": "ts-node src/index.ts",
-    "build": "tsc -p .",
+    "dev": "yarn clear && ts-node src/index.ts",
+    "build": "yarn clear && tsc -p .",
     "test": "yarn clear && yarn build && node lib/index.js",
     "release": "yarn clear && yarn build && npm publish --registry=https://registry.npmjs.org/"
   },

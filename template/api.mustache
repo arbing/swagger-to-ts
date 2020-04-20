@@ -7,6 +7,8 @@ import * as models from './models'
  */
 export function {{name}}({{#paramsType}}params{{^paramsRequired}}?{{/paramsRequired}}: {{&paramsType}}{{#dataType}}, {{/dataType}}{{/paramsType}}{{#dataType}}data{{^dataRequired}}?{{/dataRequired}}: {{&dataType}}{{/dataType}}) {
   return fetchService.{{method}}<{{&returnType}}>('{{&path}}', {{#paramsType}}params{{/paramsType}}{{^paramsType}}undefined{{/paramsType}}, {{#dataType}}data{{/dataType}}{{^dataType}}undefined{{/dataType}})
-}
+}{{^-last}}
 
+{{/-last}}
 {{/operations}}
+

@@ -14,7 +14,8 @@ export interface {{&className}}{{#parent}} extends {{{parent}}} {{/parent}} {
    */
   {{/description}}
   {{name}}{{^required}}?{{/required}}: {{&type}}
+{{^-last}}
 
-{{/properties}}
+{{/-last}}{{/properties}}
 }
 {{/model}}
