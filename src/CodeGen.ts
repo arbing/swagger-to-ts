@@ -6,19 +6,19 @@ import { OpenAPIV2, IJsonSchema } from 'openapi-types'
 import Mustache from 'mustache'
 
 export interface GenConfig {
-  apiUrl: string
-  apiPaths: string
-  basePath: string
+  docUrl: string
+  baseUrl: string
   templateDir: string
   outputDir: string
+  paths: string[]
 }
 
-const defaultConfig: GenConfig = {
-  apiUrl: '',
-  apiPaths: '',
-  basePath: '',
+export const defaultConfig: GenConfig = {
+  docUrl: '',
+  baseUrl: '',
   templateDir: '',
   outputDir: '',
+  paths: [],
 }
 
 type HttpMethod = 'get' | 'post'
@@ -120,8 +120,8 @@ export class CodeGen {
 
   private async fetchSwagger() {
     try {
-      console.log(`[INFO]: 下载 Swagger..., apiUrl: ${this.#config.apiUrl}`)
-      const doc = await SwaggerParser.parse(this.#config.apiUrl)
+      console.log(`[INFO]: 下载 Swagger..., apiUrl: ${this.#config.docUrl}`)
+      const doc = await SwaggerParser.parse(this.#config.docUrl)
       this.#doc = doc as OpenAPIV2.Document
 
       const outputDir = path.join(this.#config.outputDir)
@@ -139,12 +139,12 @@ export class CodeGen {
   }
 
   private async parsePaths() {
-    const apiPaths = this.#config.apiPaths ? this.#config.apiPaths.split(',') : []
+    const apiPaths = this.#config.paths || []
     const pathKeys = apiPaths.length
       ? Object.keys(this.#doc.paths).filter((path) => apiPaths.some((s) => path.includes(s)))
       : Object.keys(this.#doc.paths)
 
-    console.log(`[INFO]: 解析接口..., paths: ${pathKeys.length}, apiPaths: ${this.#config.apiPaths}`)
+    console.log(`[INFO]: 解析接口..., paths: ${pathKeys.length}, apiPaths: ${this.#config.paths}`)
 
     for (const path of pathKeys) {
       const pathItem = this.#doc.paths[path] as OpenAPIV2.PathItemObject
@@ -171,7 +171,7 @@ export class CodeGen {
 
         const operation: OperationDef = {
           apiName: apiName,
-          path: this.#config.basePath ? this.#config.basePath + path : path,
+          path: this.#config.baseUrl ? this.#config.baseUrl + path : path,
           method,
           name: extractOperationName(path),
           summary: opItem?.summary,
