@@ -284,6 +284,9 @@ export class CodeGen {
 
   private resolveReferenceType(refObj: OpenAPIV2.ReferenceObject) {
     const ref = refObj.$ref
+    if (!ref) {
+      return undefined
+    }
     const definition = this.getRef(ref)
     if (!definition) {
       return undefined
@@ -345,6 +348,8 @@ export class CodeGen {
               if (genericTypes.includes(propType)) {
                 type = type.replace(new RegExp(propType, 'g'), 'T')
               }
+            } else {
+              type = `List«${propType}»`
             }
           } else if (propItems.type === 'object') {
             if (isGenericType) {
@@ -361,8 +366,18 @@ export class CodeGen {
           type: propertyType,
           required: definition.required && definition.required.includes(key),
         }
+
+        // fix Result<T>
+        if (className === 'Result<T>' && key === 'result') {
+          property.type = 'T'
+        }
+
         properties.push(property)
       }
+    }
+
+    if (this.isBuiltinType(modelName)) {
+      return this.convertBuiltinType(modelName)
     }
 
     const model: ModelDef = {
@@ -415,10 +430,16 @@ export class CodeGen {
   }
 
   private getRef(ref: string) {
+    if (!ref) {
+      return undefined
+    }
     if (!this.#doc.definitions) {
       return undefined
     }
-    return this.#doc.definitions[this.getRefKey(ref)]
+
+    const refKey = this.getRefKey(ref)
+
+    return this.#doc.definitions[refKey]
   }
 
   private getRefKey(ref: string) {
@@ -457,11 +478,13 @@ export class CodeGen {
     int32: 'number',
     int64: 'number',
     number: 'number',
+    Number: 'number',
     'date-time': 'number',
     Date: 'number',
     array: 'Array',
     Array: 'Array',
     List: 'Array',
+    Set: 'Set',
     Map: 'Map',
     object: 'object',
     Object: 'object',

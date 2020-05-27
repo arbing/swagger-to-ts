@@ -52,7 +52,7 @@ async function main() {
 
     process.exit(0)
   } catch (error) {
-    console.error(chalk.red(error))
+    console.error(error)
 
     process.exit(1)
   }

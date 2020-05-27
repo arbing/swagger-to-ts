@@ -2,4 +2,6 @@
 import * as {{name}} from './{{name}}'
 {{/apis}}
 
-export { {{#apis}}{{name}}{{^-last}}, {{/-last}}{{/apis}} }
+{{#apis}}
+export { {{name}} }
+{{/apis}}
