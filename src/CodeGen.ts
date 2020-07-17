@@ -40,6 +40,9 @@ interface OperationDef {
   dataType?: string
   dataRequired?: boolean
   returnType: string
+  hasBody: boolean
+  hasArgs: boolean
+  hasReturn: boolean
 }
 
 interface ModelDef {
@@ -169,10 +172,14 @@ export class CodeGen {
         let returnType = this.resolveOperationReturnType(path, opItem)
         returnType = this.fixModelType(returnType) as string
 
+        const hasArgs = !!paramsTypeInfo?.type || !!dataTypeInfo?.type
+        const hasBody = method !== 'get'
+        const hasReturn = !!returnType && returnType !== 'void'
+
         const operation: OperationDef = {
           apiName: apiName,
           path: this.#config.baseUrl ? this.#config.baseUrl + path : path,
-          method,
+          method: hasReturn ? method : 'download',
           name: extractOperationName(path),
           summary: opItem?.summary,
           paramsType: paramsTypeInfo?.type,
@@ -180,6 +187,9 @@ export class CodeGen {
           dataType: dataTypeInfo?.type,
           dataRequired: dataTypeInfo?.required,
           returnType,
+          hasBody,
+          hasArgs,
+          hasReturn,
         }
         this.#operations.push(operation)
 
@@ -471,6 +481,7 @@ export class CodeGen {
   }
 
   #builtinType: Record<string, string> = {
+    void: 'void',
     boolean: 'boolean',
     string: 'string',
     integer: 'number',
@@ -515,6 +526,7 @@ export class CodeGen {
     let modelType = fullType
 
     const types = this.extractGenericType(modelType)
+    console.log('types :>> ', modelType, types)
     for (const type of types) {
       if (this.isBuiltinType(type)) {
         const builtinType = this.convertBuiltinType(type)
@@ -532,7 +544,15 @@ export class CodeGen {
           modelType = modelType.replace(match, match.replace(type, builtinType))
         }
       } else {
-        modelType = modelType.replace(new RegExp(type, 'g'), `models.${type}`)
+        const regex = new RegExp(`[^\\w]?${type}[^\\w]`, 'g')
+        const matchArr: RegExpMatchArray | null = modelType.match(regex)
+        if (matchArr) {
+          for (const match of matchArr) {
+            modelType = modelType.replace(match, match.replace(type, `models.${type}`))
+          }
+        } else {
+          modelType = modelType.replace(new RegExp(type, 'g'), `models.${type}`)
+        }
       }
     }
 
