@@ -1,12 +1,13 @@
 import { fetchService } from '@/services'
+import { FetchConfig } from '@/services/fetchService'
 import * as models from './models'
 
 {{#operations}}
 /**
  * {{&summary}}
  */
-export function {{name}}({{#paramsType}}params{{^paramsRequired}}?{{/paramsRequired}}: {{&paramsType}}{{#dataType}}, {{/dataType}}{{/paramsType}}{{#dataType}}data{{^dataRequired}}?{{/dataRequired}}: {{&dataType}}{{/dataType}}) {
-  return fetchService.{{method}}<{{&returnType}}>('{{&path}}', {{#paramsType}}params{{/paramsType}}{{^paramsType}}undefined{{/paramsType}}, {{#dataType}}data{{/dataType}}{{^dataType}}undefined{{/dataType}})
+export function {{name}}({{#paramsType}}params{{^paramsRequired}}?{{/paramsRequired}}: {{&paramsType}}{{#dataType}}, {{/dataType}}{{/paramsType}}{{#dataType}}data{{^dataRequired}}?{{/dataRequired}}: {{&dataType}}{{/dataType}}{{#hasArgs}}, {{/hasArgs}}config?: Partial<FetchConfig>) {
+  return fetchService.{{method}}{{#hasReturn}}<{{&returnType}}>{{/hasReturn}}('{{&path}}', {{#paramsType}}params{{/paramsType}}{{^paramsType}}undefined{{/paramsType}}{{#hasBody}}, {{#dataType}}data{{/dataType}}{{^dataType}}undefined{{/dataType}}{{/hasBody}}, config)
 }{{^-last}}
 
 {{/-last}}
