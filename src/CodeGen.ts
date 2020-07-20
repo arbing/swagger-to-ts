@@ -526,7 +526,6 @@ export class CodeGen {
     let modelType = fullType
 
     const types = this.extractGenericType(modelType)
-    console.log('types :>> ', modelType, types)
     for (const type of types) {
       if (this.isBuiltinType(type)) {
         const builtinType = this.convertBuiltinType(type)
