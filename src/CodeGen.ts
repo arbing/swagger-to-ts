@@ -610,12 +610,14 @@ export class CodeGen {
       fs.writeFileSync(path.join(apisDir, `${api.name}.ts`), text, fileOptions)
     }
 
+    const baseName = _.camelCase(this.#config.baseUrl.replace(/\//g, ''))
+
     const apisTemplatePath = path.join(this.#config.templateDir, 'apis.mustache')
     if (!fs.existsSync(apisTemplatePath)) {
       throw new Error(`[ERROR]: 模版文件 ${apisTemplatePath} 不存在`)
     }
     const apisTemplate = fs.readFileSync(apisTemplatePath, fileOptions)
-    const text = Mustache.render(apisTemplate, { apis: apis })
+    const text = Mustache.render(apisTemplate, { baseName, apis: apis })
     fs.writeFileSync(path.join(apisDir, `index.ts`), text, fileOptions)
 
     console.log(
