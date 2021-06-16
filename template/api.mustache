@@ -1,13 +1,13 @@
-import { fetchService } from '@/services'
-import { FetchConfig } from '@/services/fetchService'
-import * as models from './models'
+import { get, post, download } from '@/services'
+import type { FetchConfig } from '@/services'
+import type * as models from './models'
 
 {{#operations}}
 /**
  * {{&summary}}
  */
-export function {{name}}({{#paramsType}}params{{^paramsRequired}}?{{/paramsRequired}}: {{&paramsType}}{{#dataType}}, {{/dataType}}{{/paramsType}}{{#dataType}}data{{^dataRequired}}?{{/dataRequired}}: {{&dataType}}{{/dataType}}{{#hasArgs}}, {{/hasArgs}}config?: Partial<FetchConfig>) {
-  return fetchService.{{method}}{{#hasReturn}}<{{&returnType}}>{{/hasReturn}}('{{&path}}', {{#paramsType}}params{{/paramsType}}{{^paramsType}}undefined{{/paramsType}}{{#hasBody}}, {{#dataType}}data{{/dataType}}{{^dataType}}undefined{{/dataType}}{{/hasBody}}, config)
+export function {{fullName}}({{#paramsType}}params{{^paramsRequired}}?{{/paramsRequired}}: {{&paramsType}}{{#dataType}}, {{/dataType}}{{/paramsType}}{{#dataType}}data{{^dataRequired}}?{{/dataRequired}}: {{&dataType}}{{/dataType}}{{#hasArgs}}, {{/hasArgs}}config?: Partial<FetchConfig>) {
+  return {{method}}{{#hasReturn}}<{{&returnType}}>{{/hasReturn}}('{{&path}}', {{#paramsType}}params{{/paramsType}}{{^paramsType}}undefined{{/paramsType}}{{#hasBody}}, {{#dataType}}data{{/dataType}}{{^dataType}}undefined{{/dataType}}{{/hasBody}}, config)
 }{{^-last}}
 
 {{/-last}}

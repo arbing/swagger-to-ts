@@ -4,6 +4,7 @@ import path from 'path'
 import SwaggerParser from '@apidevtools/swagger-parser'
 import { OpenAPIV2, IJsonSchema } from 'openapi-types'
 import Mustache from 'mustache'
+import _ from 'lodash'
 
 export interface GenConfig {
   docUrl: string
@@ -34,6 +35,7 @@ interface OperationDef {
   path: string
   method: string
   name: string
+  fullName: string
   summary?: string
   paramsType?: string
   paramsRequired?: boolean
@@ -90,6 +92,14 @@ function extractApiName(path: string) {
 function extractOperationName(path: string) {
   const arr = path.split('/')
   return arr[arr.length - 1]
+}
+
+function extractApiOperationFullName(path: string) {
+  const arr = path.split('/').filter((d) => !!d)
+  if (arr.length === 4) {
+    arr.splice(1, 1)
+  }
+  return arr.map((d) => _.camelCase(d)).join('_')
 }
 
 export class CodeGen {
@@ -176,11 +186,13 @@ export class CodeGen {
         const hasBody = method !== 'get'
         const hasReturn = !!returnType && returnType !== 'void'
 
+        const fullPath = this.#config.baseUrl ? this.#config.baseUrl + path : path
         const operation: OperationDef = {
           apiName: apiName,
-          path: this.#config.baseUrl ? this.#config.baseUrl + path : path,
+          path: fullPath,
           method: hasReturn ? method : 'download',
           name: extractOperationName(path),
+          fullName: extractApiOperationFullName(fullPath),
           summary: opItem?.summary,
           paramsType: paramsTypeInfo?.type,
           paramsRequired: paramsTypeInfo?.required,
@@ -580,7 +592,15 @@ export class CodeGen {
 
     const apiNames = [...this.#apis]
     apiNames.sort()
-    const apis = toViewDataList(apiNames.map((d) => ({ name: d })))
+    const apis = toViewDataList(
+      apiNames.map((d) => {
+        const name = d
+        return {
+          name,
+        }
+      }),
+    )
+
     for (const api of apis) {
       const operations = toViewDataList(this.#operations.filter((d) => d.apiName === api.name))
 

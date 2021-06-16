@@ -1,24 +1,3 @@
-// {
-//   "compilerOptions": {
-//     "target": "es6",
-//     "module": "commonjs",
-//     "lib": ["esnext", "dom"],
-//     "declaration": true,
-//     "outDir": "lib",
-//     "strict": true,
-//     "noImplicitAny": false,
-//     "types": ["node"],
-//     "esModuleInterop": true,
-//     "resolveJsonModule": true,
-//     "baseUrl": "./",
-//     "paths": {
-//       "@/*": ["src/*"]
-//     },
-//     "typeRoots": ["./node_modules/@types", "./src/typings"]
-//   },
-//   "include": ["src/**/*"],
-//   "exclude": ["node_modules", "dist", "lib"]
-// }
 {
   "compilerOptions": {
     "strict": true,
