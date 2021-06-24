@@ -373,7 +373,7 @@ export class CodeGen {
             } else {
               type = `List«${propType}»`
             }
-          } else if (propItems.type === 'object') {
+          } else if (propItems.type === 'any') {
             if (isGenericType) {
               type = 'T'
             }
@@ -507,10 +507,11 @@ export class CodeGen {
     array: 'Array',
     Array: 'Array',
     List: 'Array',
-    Set: 'Set',
-    Map: 'Map',
-    object: 'object',
-    Object: 'object',
+    Set: 'Array',
+    Map: 'Record',
+    any: 'any',
+    object: 'any',
+    Object: 'any',
     T: 'T',
     T1: 'T1',
     T2: 'T2',
