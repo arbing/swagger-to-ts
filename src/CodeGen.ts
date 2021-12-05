@@ -96,8 +96,8 @@ function extractOperationName(path: string) {
 
 function extractApiOperationFullName(path: string) {
   const arr = path.split('/').filter((d) => !!d)
-  if (arr.length === 4) {
-    arr.splice(1, 1)
+  if (arr.length > 3) {
+    arr.splice(1, arr.length - 3)
   }
   return arr.map((d) => _.camelCase(d)).join('_')
 }
