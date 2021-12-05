@@ -1,6 +1,6 @@
 {
   "name": "swagger-to-ts",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Generate typescript services and models from Swagger",
   "main": "./lib/index.js",
   "bin": {

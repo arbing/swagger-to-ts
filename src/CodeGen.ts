@@ -390,7 +390,7 @@ export class CodeGen {
         }
 
         // fix Result<T>
-        if (className === 'Result<T>' && key === 'result') {
+        if (className === 'Result<T>' && (key === 'result' || key === 'data')) {
           property.type = 'T'
         }
 
