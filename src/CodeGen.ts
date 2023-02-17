@@ -496,6 +496,7 @@ export class CodeGen {
     void: 'void',
     boolean: 'boolean',
     string: 'string',
+    byte: 'number',
     integer: 'number',
     int: 'number',
     int32: 'number',
