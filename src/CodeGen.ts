@@ -5,6 +5,9 @@ import SwaggerParser from '@apidevtools/swagger-parser'
 import { OpenAPIV2, IJsonSchema } from 'openapi-types'
 import Mustache from 'mustache'
 import _ from 'lodash'
+import ApiSpecConverter from 'api-spec-converter'
+import axios from 'axios'
+import URI from 'urijs'
 
 export interface GenConfig {
   docUrl: string
@@ -131,11 +134,38 @@ export class CodeGen {
     await this.genModels()
   }
 
+  private async fetchJsonText(pathOrUrl: string) {
+    try {
+      if (fs.existsSync(pathOrUrl)) {
+        return fs.readFileSync(pathOrUrl, { encoding: 'utf-8' })
+      }
+    } catch (e) {}
+
+    const uri = new URI(pathOrUrl)
+    if (uri.is('absolute')) {
+      const resp = await axios.get(this.#config.docUrl, { responseType: 'text' })
+      const text = resp.data
+      if (typeof text === 'object') {
+        return JSON.stringify(text, null, 2)
+      }
+      return text
+    } else if (uri.is('relative')) {
+      return fs.readFileSync(pathOrUrl, { encoding: 'utf-8' })
+    } else {
+      return pathOrUrl
+    }
+  }
+
   private async fetchSwagger() {
     try {
       console.log(`[INFO]: 下载 Swagger..., apiUrl: ${this.#config.docUrl}`)
-      const doc = await SwaggerParser.parse(this.#config.docUrl)
-      this.#doc = doc as OpenAPIV2.Document
+
+      const docText = await this.fetchJsonText(this.#config.docUrl)
+      const apiDocsJson = JSON.parse(docText)
+      if (typeof apiDocsJson !== 'object' || (!apiDocsJson.swagger && !apiDocsJson.openapi)) {
+        console.error(chalk.red('[ERROR]: json 格式错误'))
+        throw new Error('json 格式错误')
+      }
 
       const outputDir = path.join(this.#config.outputDir)
       if (!fs.existsSync(outputDir)) {
@@ -143,8 +173,23 @@ export class CodeGen {
       }
       const fileOptions = { encoding: 'utf-8' }
 
-      const text = JSON.stringify(this.#doc, undefined, 2)
-      fs.writeFileSync(path.join(outputDir, `api-docs.json`), text, fileOptions)
+      const outputPath = path.join(outputDir, `api-docs.json`)
+      fs.writeFileSync(outputPath, JSON.stringify(apiDocsJson, undefined, 2), fileOptions)
+
+      if (apiDocsJson.openapi && apiDocsJson.openapi.startsWith('3.')) {
+        const converted = await ApiSpecConverter.convert({
+          from: 'openapi_3',
+          to: 'swagger_2',
+          source: outputPath,
+        })
+        const swagger2Json = converted.stringify()
+        fs.writeFileSync(outputPath, JSON.stringify(JSON.parse(swagger2Json), undefined, 2), fileOptions)
+      }
+
+      const doc = await SwaggerParser.parse(outputPath)
+      this.#doc = doc as OpenAPIV2.Document
+
+      fs.writeFileSync(outputPath, JSON.stringify(this.#doc, undefined, 2), fileOptions)
     } catch (error) {
       console.error(chalk.red('[ERROR]: 下载 Swagger 失败'))
       throw error
