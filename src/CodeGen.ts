@@ -11,6 +11,7 @@ import URI from 'urijs'
 
 export interface GenConfig {
   docUrl: string
+  docVersion: string
   baseUrl: string
   templateDir: string
   outputDir: string
@@ -19,6 +20,7 @@ export interface GenConfig {
 
 export const defaultConfig: GenConfig = {
   docUrl: '',
+  docVersion: '2.0',
   baseUrl: '',
   templateDir: '',
   outputDir: '',
@@ -106,7 +108,7 @@ function extractApiOperationFullName(path: string) {
 }
 
 export class CodeGen {
-  #config: Required<GenConfig> = defaultConfig
+  #config: GenConfig = defaultConfig
 
   #doc: OpenAPIV2.Document = (undefined as unknown) as OpenAPIV2.Document
 
@@ -167,6 +169,9 @@ export class CodeGen {
         throw new Error('json 格式错误')
       }
 
+      const docVersion = apiDocsJson.openapi || apiDocsJson.swagger || '2.0'
+      this.#config.docVersion = docVersion
+
       const outputDir = path.join(this.#config.outputDir)
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true })
@@ -176,7 +181,7 @@ export class CodeGen {
       const outputPath = path.join(outputDir, `api-docs.json`)
       fs.writeFileSync(outputPath, JSON.stringify(apiDocsJson, undefined, 2), fileOptions)
 
-      if (apiDocsJson.openapi && apiDocsJson.openapi.startsWith('3.')) {
+      if (docVersion.startsWith('3.')) {
         const converted = await ApiSpecConverter.convert({
           from: 'openapi_3',
           to: 'swagger_2',
@@ -269,11 +274,15 @@ export class CodeGen {
 
     const properties: PropertyDef[] = []
     for (const parameter of parameters) {
-      const type = this.resolveItemsType(parameter)
+      let type = 'any'
+      if (this.#config.docVersion.startsWith('3.')) {
+      } else {
+        type = this.resolveItemsType(parameter)
+      }
       const property: PropertyDef = {
         name: parameter.name,
         description: parameter.description,
-        type,
+        type: type,
         required: parameter.required,
       }
       properties.push(property)

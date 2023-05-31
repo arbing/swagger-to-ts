@@ -23,6 +23,7 @@ async function main() {
     } else {
       genConfig = {
         docUrl: program.docUrl,
+        docVersion: '2.0',
         baseUrl: program.baseUrl,
         templateDir: program.templateDir,
         outputDir: program.outputDir,
