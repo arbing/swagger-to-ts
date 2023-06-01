@@ -274,8 +274,9 @@ export class CodeGen {
 
     const properties: PropertyDef[] = []
     for (const parameter of parameters) {
-      let type = 'any'
-      if (this.#config.docVersion.startsWith('3.')) {
+      let type = ''
+      if (this.#config.docVersion.startsWith('3.') && parameter.type == 'string' && !parameter.format) {
+        type = 'any'
       } else {
         type = this.resolveItemsType(parameter)
       }
