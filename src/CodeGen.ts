@@ -274,15 +274,22 @@ export class CodeGen {
 
     const properties: PropertyDef[] = []
     for (const parameter of parameters) {
+      // fix openapi_3 query parameter ArraySchema
+      if (parameter.type == 'array' && parameter.format && parameter.items?.type && parameter.items?.format) {
+        delete parameter.format
+      }
+
+      // fix openapi_3 query parameter type
       let type = ''
       if (this.#config.docVersion.startsWith('3.') && parameter.type == 'string' && !parameter.format) {
         type = 'any'
       } else {
         type = this.resolveItemsType(parameter)
       }
+
       const property: PropertyDef = {
         name: parameter.name,
-        description: parameter.description,
+        description: parameter.description || (parameter as any).items?.description,
         type: type,
         required: parameter.required,
       }
