@@ -90,19 +90,24 @@ function capitalizeFirstLetter(str: string) {
 }
 
 function extractApiName(path: string) {
-  const arr = path.split('/')
-  return arr.length > 2 ? arr[arr.length - 2] : arr[arr.length - 1]
+  const arr = path.split('/').filter((d) => !!d)
+  if (arr.length > 2) {
+    // /platform/tag/public/method → tag
+    return arr[1]
+  }
+  return arr[arr.length - 1]
 }
 
 function extractOperationName(path: string) {
-  const arr = path.split('/')
+  const arr = path.split('/').filter((d) => !!d)
   return arr[arr.length - 1]
 }
 
 function extractApiOperationFullName(path: string) {
   const arr = path.split('/').filter((d) => !!d)
-  if (arr.length > 3) {
-    arr.splice(1, arr.length - 3)
+  if (arr.length > 2) {
+    // /service/platform/tag/public/method → service_tag_public_method
+    arr.splice(1, 1)
   }
   return arr.map((d) => _.camelCase(d)).join('_')
 }
