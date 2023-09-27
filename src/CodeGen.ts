@@ -16,6 +16,7 @@ export interface GenConfig {
   templateDir: string
   outputDir: string
   paths: string[]
+  excludePaths: string[]
 }
 
 export const defaultConfig: GenConfig = {
@@ -25,6 +26,7 @@ export const defaultConfig: GenConfig = {
   templateDir: '',
   outputDir: '',
   paths: [],
+  excludePaths: [],
 }
 
 type HttpMethod = 'get' | 'post'
@@ -115,7 +117,7 @@ function extractApiOperationFullName(path: string) {
 export class CodeGen {
   #config: GenConfig = defaultConfig
 
-  #doc: OpenAPIV2.Document = (undefined as unknown) as OpenAPIV2.Document
+  #doc: OpenAPIV2.Document = undefined as unknown as OpenAPIV2.Document
 
   #apis: Set<string> = new Set()
 
@@ -208,11 +210,19 @@ export class CodeGen {
 
   private async parsePaths() {
     const apiPaths = this.#config.paths || []
-    const pathKeys = apiPaths.length
+    const excludePaths = this.#config.excludePaths || []
+    // 过滤接口
+    let pathKeys = apiPaths.length
       ? Object.keys(this.#doc.paths).filter((path) => apiPaths.some((s) => path.includes(s)))
       : Object.keys(this.#doc.paths)
+    // 排除接口
+    pathKeys = excludePaths.length ? pathKeys.filter((path) => excludePaths.every((s) => !path.includes(s))) : pathKeys
 
-    console.log(`[INFO]: 解析接口..., paths: ${pathKeys.length}, apiPaths: ${this.#config.paths}`)
+    console.log(
+      `[INFO]: 解析接口..., paths: ${pathKeys.length}, apiPaths: ${this.#config.paths}, excludePaths: ${
+        this.#config.excludePaths
+      }`,
+    )
 
     for (const path of pathKeys) {
       const pathItem = this.#doc.paths[path] as OpenAPIV2.PathItemObject

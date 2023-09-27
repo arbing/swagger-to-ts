@@ -15,6 +15,7 @@ async function main() {
       .option('-t, --templateDir [type]', '指定自定义模版文件目录', '')
       .option('-o, --outputDir [type]', '指定生成目录', '')
       .option('-p, --paths [type]', '指定哪些接口路径可以生成，逗号分隔', '')
+      .option('-p, --excludePaths [type]', '指定哪些接口路径排除在外不生成，逗号分隔', '')
       .parse(process.argv)
 
     let genConfig: GenConfig = defaultConfig
@@ -28,6 +29,7 @@ async function main() {
         templateDir: program.templateDir,
         outputDir: program.outputDir,
         paths: program.paths ? (program.paths as string).split(',') : [],
+        excludePaths: program.excludePaths ? (program.excludePaths as string).split(',') : [],
       }
     }
 
