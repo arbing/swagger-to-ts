@@ -10,23 +10,68 @@ import axios from 'axios'
 import URI from 'urijs'
 
 export interface GenConfig {
+  /**
+   * Swagger文档地址，如: https://localhost/v2/api-docs
+   */
   docUrl: string
+
+  /**
+   * Swagger文档版本
+   */
   docVersion: string
+
+  /**
+   * 服务名称
+   */
+  baseName: string
+
+  /**
+   * 接口路径前缀
+   */
   baseUrl: string
+
+  /**
+   * 自定义模版文件目录
+   */
   templateDir: string
+
+  /**
+   * 生成目录
+   */
   outputDir: string
+
+  /**
+   * 哪些接口路径可以生成
+   */
   paths: string[]
+
+  /**
+   * 哪些接口路径排除在外不生成
+   */
   excludePaths: string[]
+
+  /**
+   * 接口tag在path路径的索引位置
+   */
+  tagIndex?: number
+
+  /**
+   * path路径哪些索引位置不参与接口名称拼接
+   */
+  apiCut?: number[]
 }
 
 export const defaultConfig: GenConfig = {
   docUrl: '',
   docVersion: '2.0',
+  baseName: '',
   baseUrl: '',
   templateDir: '',
   outputDir: '',
   paths: [],
   excludePaths: [],
+  tagIndex: undefined,
+  apiCut: [],
 }
 
 type HttpMethod = 'get' | 'post'
@@ -91,29 +136,6 @@ function capitalizeFirstLetter(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-function extractApiName(path: string) {
-  const arr = path.split('/').filter((d) => !!d)
-  if (arr.length > 2) {
-    // /platform/tag/public/method → tag
-    return arr[1]
-  }
-  return arr[arr.length - 1]
-}
-
-function extractOperationName(path: string) {
-  const arr = path.split('/').filter((d) => !!d)
-  return arr[arr.length - 1]
-}
-
-function extractApiOperationFullName(path: string) {
-  const arr = path.split('/').filter((d) => !!d)
-  if (arr.length > 2) {
-    // /service/platform/tag/public/method → service_tag_public_method
-    arr.splice(1, 1)
-  }
-  return arr.map((d) => _.camelCase(d)).join('_')
-}
-
 export class CodeGen {
   #config: GenConfig = defaultConfig
 
@@ -141,6 +163,41 @@ export class CodeGen {
     await this.genApis()
 
     await this.genModels()
+  }
+
+  private extractApiName(path: string) {
+    const arr = path.split('/').filter((d) => !!d)
+    if (this.#config.tagIndex != undefined && arr.length > this.#config.tagIndex) {
+      return arr[this.#config.tagIndex]
+    }
+    if (arr.length > 2) {
+      // /tag/operation → tag
+      return arr[arr.length - 2]
+    }
+    // /tag/operation → operation
+    return arr[arr.length - 1]
+  }
+
+  private extractOperationName(path: string) {
+    const arr = path.split('/').filter((d) => !!d)
+    return arr[arr.length - 1]
+  }
+
+  private extractApiOperationFullName(path: string) {
+    const names = path.split('/').filter((d) => !!d)
+    let arr: string[] = []
+
+    if (this.#config.apiCut && this.#config.apiCut.length) {
+      for (let index = 0; index < names.length; index++) {
+        if (!this.#config.apiCut.includes(index)) {
+          arr.push(names[index])
+        }
+      }
+    } else {
+      arr = [...names]
+    }
+
+    return arr.map((d) => _.camelCase(d)).join('_')
   }
 
   private async fetchJsonText(pathOrUrl: string) {
@@ -232,7 +289,7 @@ export class CodeGen {
           continue
         }
 
-        const apiName = extractApiName(path)
+        const apiName = this.extractApiName(path)
 
         const paramsTypeInfo = this.resolveOperationParamsType(path, opItem)
         if (paramsTypeInfo) {
@@ -252,12 +309,16 @@ export class CodeGen {
         const hasReturn = !!returnType && returnType !== 'void'
 
         const fullPath = this.#config.baseUrl ? this.#config.baseUrl + path : path
+        const baseName = this.#config.baseName
+          ? this.#config.baseName
+          : _.camelCase(this.#config.baseUrl.replace(/\//g, ''))
+        const fullName = (baseName ? baseName + '_' : '') + this.extractApiOperationFullName(path)
         const operation: OperationDef = {
           apiName: apiName,
           path: fullPath,
           method: hasReturn ? method : 'download',
-          name: extractOperationName(path),
-          fullName: extractApiOperationFullName(fullPath),
+          name: this.extractOperationName(path),
+          fullName: fullName,
           summary: opItem?.summary,
           paramsType: paramsTypeInfo?.type,
           paramsRequired: paramsTypeInfo?.required,
@@ -311,7 +372,7 @@ export class CodeGen {
       properties.push(property)
     }
 
-    const paramsType = capitalizeFirstLetter(extractOperationName(path)) + 'Params'
+    const paramsType = capitalizeFirstLetter(_.camelCase(this.extractApiOperationFullName(path))) + 'Params'
 
     const model: ModelDef = {
       name: paramsType,
@@ -689,7 +750,9 @@ export class CodeGen {
       fs.writeFileSync(path.join(apisDir, `${api.name}.ts`), text, fileOptions)
     }
 
-    const baseName = _.camelCase(this.#config.baseUrl.replace(/\//g, ''))
+    const baseName = this.#config.baseName
+      ? this.#config.baseName
+      : _.camelCase(this.#config.baseUrl.replace(/\//g, ''))
 
     const apisTemplatePath = path.join(this.#config.templateDir, 'apis.mustache')
     if (!fs.existsSync(apisTemplatePath)) {
