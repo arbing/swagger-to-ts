@@ -59,6 +59,11 @@ export interface GenConfig {
    * path路径哪些索引位置不参与接口名称拼接
    */
   apiCut?: number[]
+
+  /**
+   * 请求path路径替换
+   */
+  pathReplace?: string[]
 }
 
 export const defaultConfig: GenConfig = {
@@ -72,6 +77,7 @@ export const defaultConfig: GenConfig = {
   excludePaths: [],
   tagIndex: undefined,
   apiCut: [],
+  pathReplace: undefined,
 }
 
 type HttpMethod = 'get' | 'post'
@@ -281,12 +287,16 @@ export class CodeGen {
       }`,
     )
 
-    for (const path of pathKeys) {
+    for (let path of pathKeys) {
       const pathItem = this.#doc.paths[path] as OpenAPIV2.PathItemObject
       for (const method of httpMethods) {
         const opItem = pathItem[method]
         if (!opItem) {
           continue
+        }
+
+        if (this.#config.pathReplace && this.#config.pathReplace.length == 2) {
+          path = path.replace(this.#config.pathReplace[0], this.#config.pathReplace[1])
         }
 
         const apiName = this.extractApiName(path)

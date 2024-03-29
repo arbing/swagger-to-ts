@@ -19,6 +19,7 @@ async function main() {
       .option('-e, --excludePaths [type]', '指定哪些接口路径排除在外不生成，逗号分隔', '')
       .option('--tagIndex [type]', '指定接口tag在path路径的索引位置', '')
       .option('--apiCut [type]', '指定path路径哪些索引位置不参与接口名称拼接，逗号分隔', '')
+      .option('--pathReplace [type]', '指定请求path路径替换，逗号分隔', '')
       .parse(process.argv)
 
     let genConfig: GenConfig = defaultConfig
@@ -36,6 +37,7 @@ async function main() {
         excludePaths: program.excludePaths ? (program.excludePaths as string).split(',') : [],
         tagIndex: program.tagIndex ? Number(program.tagIndex) : undefined,
         apiCut: program.apiCut ? (program.apiCut as string).split(',').map(Number) : [],
+        pathReplace: program.pathReplace ? (program.pathReplace as string).split(',') : [],
       }
     }
 
