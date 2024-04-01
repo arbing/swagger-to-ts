@@ -304,7 +304,7 @@ export class CodeGen {
 
         const apiName = this.extractApiName(path)
 
-        const paramsTypeInfo = this.resolveOperationParamsType(path, opItem)
+        const paramsTypeInfo = this.resolveOperationParamsType(method, path, opItem)
         if (paramsTypeInfo) {
           paramsTypeInfo.type = this.fixModelType(paramsTypeInfo.type) as string
         }
@@ -356,7 +356,7 @@ export class CodeGen {
     }
   }
 
-  private resolveOperationParamsType(path: string, operation: OpenAPIV2.OperationObject) {
+  private resolveOperationParamsType(method: string, path: string, operation: OpenAPIV2.OperationObject) {
     if (!operation.parameters) {
       return undefined
     }
@@ -392,7 +392,8 @@ export class CodeGen {
       properties.push(property)
     }
 
-    const paramsType = capitalizeFirstLetter(_.camelCase(this.extractApiOperationFullName(path))) + 'Params'
+    const paramsType =
+      capitalizeFirstLetter(_.camelCase(this.extractApiOperationFullName(path) + '_' + method)) + 'Params'
 
     const model: ModelDef = {
       name: paramsType,
