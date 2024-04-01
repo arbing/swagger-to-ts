@@ -80,8 +80,8 @@ export const defaultConfig: GenConfig = {
   pathReplace: undefined,
 }
 
-type HttpMethod = 'get' | 'post'
-const httpMethods: HttpMethod[] = ['get', 'post']
+type HttpMethod = 'get' | 'post' | 'put' | 'delete'
+const httpMethods: HttpMethod[] = ['get', 'post', 'put', 'delete']
 
 interface ApiDef {
   name: string
@@ -92,6 +92,7 @@ interface OperationDef {
   apiName: string
   path: string
   method: string
+  methodFn: string
   name: string
   fullName: string
   summary?: string
@@ -287,6 +288,8 @@ export class CodeGen {
       }`,
     )
 
+    const fullNames = new Set<string>()
+
     for (let path of pathKeys) {
       const pathItem = this.#doc.paths[path] as OpenAPIV2.PathItemObject
       for (const method of httpMethods) {
@@ -317,16 +320,22 @@ export class CodeGen {
         const hasArgs = !!paramsTypeInfo?.type || !!dataTypeInfo?.type
         const hasBody = method !== 'get'
         const hasReturn = !!returnType && returnType !== 'void'
+        const methodFn = hasReturn ? (method === 'delete' ? 'del' : method) : 'download'
 
         const fullPath = this.#config.baseUrl ? this.#config.baseUrl + path : path
         const baseName = this.#config.baseName
           ? this.#config.baseName
           : _.camelCase(this.#config.baseUrl.replace(/\//g, ''))
-        const fullName = (baseName ? baseName + '_' : '') + this.extractApiOperationFullName(path)
+        let fullName = (baseName ? baseName + '_' : '') + this.extractApiOperationFullName(path)
+        if (fullNames.has(fullName)) {
+          fullName = `${fullName}_${method}`
+        }
+
         const operation: OperationDef = {
           apiName: apiName,
           path: fullPath,
-          method: hasReturn ? method : 'download',
+          method: method,
+          methodFn: methodFn,
           name: this.extractOperationName(path),
           fullName: fullName,
           summary: opItem?.summary,
@@ -342,6 +351,7 @@ export class CodeGen {
         this.#operations.push(operation)
 
         this.#apis.add(apiName)
+        fullNames.add(fullName)
       }
     }
   }
@@ -756,7 +766,9 @@ export class CodeGen {
 
       console.log(`[INFO]: 生成 api..., apiName: ${api.name}, operations: ${operations.length}`)
 
-      const text = Mustache.render(apiTemplate, { api, operations })
+      const methodFnStr = Array.from(new Set(operations.map((d) => d.methodFn))).join(', ')
+
+      const text = Mustache.render(apiTemplate, { methodFnStr, api, operations })
       fs.writeFileSync(path.join(apisDir, `${api.name}.ts`), text, fileOptions)
     }
 

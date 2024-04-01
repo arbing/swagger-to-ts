@@ -1,5 +1,5 @@
 import type { FetchConfig } from '@/services'
-import { get, post, download } from '@/services'
+import { {{methodFnStr}} } from '@/services'
 import type * as models from './models'
 
 {{#operations}}
@@ -7,7 +7,7 @@ import type * as models from './models'
  * {{&summary}}
  */
 export function {{fullName}}({{#paramsType}}params{{^paramsRequired}}?{{/paramsRequired}}: {{&paramsType}}{{#dataType}}, {{/dataType}}{{/paramsType}}{{#dataType}}data{{^dataRequired}}?{{/dataRequired}}: {{&dataType}}{{/dataType}}{{#hasArgs}}, {{/hasArgs}}config?: Partial<FetchConfig>) {
-  return {{method}}{{#hasReturn}}<{{&returnType}}>{{/hasReturn}}('{{&path}}', {{#paramsType}}params{{/paramsType}}{{^paramsType}}undefined{{/paramsType}}{{#hasBody}}, {{#dataType}}data{{/dataType}}{{^dataType}}undefined{{/dataType}}{{/hasBody}}, config)
+  return {{methodFn}}{{#hasReturn}}<{{&returnType}}>{{/hasReturn}}('{{&path}}', {{#paramsType}}params{{/paramsType}}{{^paramsType}}undefined{{/paramsType}}{{#hasBody}}, {{#dataType}}data{{/dataType}}{{^dataType}}undefined{{/dataType}}{{/hasBody}}, config)
 }{{^-last}}
 
 {{/-last}}
