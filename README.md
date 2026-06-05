@@ -6,10 +6,71 @@
 
 > Generate typescript services and models from Swagger
 
-## Start
+## Requirements
+
+- Node.js 22+
+- PNPM 10+
+
+## Install
 
 ```bash
-yarn add -D swagger-to-ts
-
-swagger-to-ts --apiUrl https://swagger/v2/api-docs --apiPaths /xx/ --basePath /xxx
+pnpm add -D swagger-to-ts
 ```
+
+## Usage
+
+```bash
+swagger-to-ts --docUrl https://swagger/v2/api-docs --baseUrl /api --paths /pets,/users --outputDir ./dist
+```
+
+Or use a config file:
+
+```bash
+swagger-to-ts --configPath ./codegen.config.json
+```
+
+```json
+{
+  "docUrl": "https://swagger/v2/api-docs",
+  "docVersion": "2.0",
+  "baseName": "",
+  "baseUrl": "/api",
+  "templateDir": "",
+  "outputDir": "./dist",
+  "paths": [],
+  "excludePaths": [],
+  "tagIndex": 0,
+  "apiCut": [],
+  "pathReplace": []
+}
+```
+
+## CLI Options
+
+| Option               | Description                                                                |
+| -------------------- | -------------------------------------------------------------------------- |
+| `-c, --configPath`   | Config file path, for example `./codegen.config.json`                      |
+| `-d, --docUrl`       | Swagger or OpenAPI document URL/file path                                  |
+| `-n, --baseName`     | Service name prefix                                                        |
+| `-b, --baseUrl`      | Request path prefix                                                        |
+| `-t, --templateDir`  | Custom template directory                                                  |
+| `-o, --outputDir`    | Output directory                                                           |
+| `-p, --paths`        | Included API paths, comma separated                                        |
+| `-e, --excludePaths` | Excluded API paths, comma separated                                        |
+| `--tagIndex`         | Path segment index used as API tag                                         |
+| `--apiCut`           | Path segment indexes ignored in generated operation names, comma separated |
+| `--pathReplace`      | Request path replacement pair, comma separated                             |
+
+## Development
+
+```bash
+pnpm install
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+## Release
+
+Publishing is handled by GitHub Actions with npm Trusted Publisher. Create a GitHub Release after npm has trusted publishing configured for this repository.

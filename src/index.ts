@@ -22,22 +22,24 @@ async function main() {
       .option('--pathReplace [type]', '指定请求path路径替换，逗号分隔', '')
       .parse(process.argv)
 
+    const options = program.opts()
+
     let genConfig: GenConfig = defaultConfig
-    if (program.configPath) {
-      genConfig = require(path.join(process.cwd(), program.configPath))
+    if (options.configPath) {
+      genConfig = require(path.join(process.cwd(), options.configPath))
     } else {
       genConfig = {
-        docUrl: program.docUrl,
+        docUrl: options.docUrl,
         docVersion: '2.0',
-        baseName: program.baseName,
-        baseUrl: program.baseUrl,
-        templateDir: program.templateDir,
-        outputDir: program.outputDir,
-        paths: program.paths ? (program.paths as string).split(',') : [],
-        excludePaths: program.excludePaths ? (program.excludePaths as string).split(',') : [],
-        tagIndex: program.tagIndex ? Number(program.tagIndex) : undefined,
-        apiCut: program.apiCut ? (program.apiCut as string).split(',').map(Number) : [],
-        pathReplace: program.pathReplace ? (program.pathReplace as string).split(',') : [],
+        baseName: options.baseName,
+        baseUrl: options.baseUrl,
+        templateDir: options.templateDir,
+        outputDir: options.outputDir,
+        paths: options.paths ? (options.paths as string).split(',') : [],
+        excludePaths: options.excludePaths ? (options.excludePaths as string).split(',') : [],
+        tagIndex: options.tagIndex ? Number(options.tagIndex) : undefined,
+        apiCut: options.apiCut ? (options.apiCut as string).split(',').map(Number) : [],
+        pathReplace: options.pathReplace ? (options.pathReplace as string).split(',') : [],
       }
     }
 
