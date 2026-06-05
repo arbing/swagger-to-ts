@@ -247,7 +247,7 @@ export class CodeGen {
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true })
       }
-      const fileOptions = { encoding: 'utf-8' }
+      const fileOptions = { encoding: 'utf-8' as BufferEncoding }
 
       const outputPath = path.join(outputDir, `api-docs.json`)
       fs.writeFileSync(outputPath, JSON.stringify(apiDocsJson, undefined, 2), fileOptions)
@@ -371,7 +371,14 @@ export class CodeGen {
     const properties: PropertyDef[] = []
     for (const parameter of parameters) {
       // fix openapi_3 query parameter ArraySchema
-      if (parameter.type == 'array' && parameter.format && parameter.items?.type && parameter.items?.format) {
+      if (
+        parameter.type == 'array' &&
+        parameter.format &&
+        parameter.items &&
+        !('$ref' in parameter.items) &&
+        parameter.items.type &&
+        parameter.items.format
+      ) {
         delete parameter.format
       }
 
@@ -433,7 +440,11 @@ export class CodeGen {
 
   private resolveOperationReturnType(path: string, operation: OpenAPIV2.OperationObject) {
     let type: string | undefined = undefined
-    const response: OpenAPIV2.Response = operation.responses['200']
+    const response = operation.responses['200']
+    if (!response) {
+      console.warn(chalk.yellow(`[WARN]: ${path} 返回值类型为空`))
+      return 'void'
+    }
 
     if ('schema' in response) {
       const schema = (response as OpenAPIV2.ResponseObject).schema
@@ -593,17 +604,22 @@ export class CodeGen {
     return type
   }
 
-  private resolveItemsType(item: OpenAPIV2.ItemsObject) {
-    let type = this.convertBuiltinType(item.type, item.format)
+  private resolveItemsType(item: OpenAPIV2.ReferenceObject | OpenAPIV2.ItemsObject) {
+    if ('$ref' in item && item.$ref) {
+      return this.resolveReferenceType(item as OpenAPIV2.ReferenceObject) as string
+    }
+
+    const itemsObject = item as OpenAPIV2.ItemsObject
+    let type = this.convertBuiltinType(itemsObject.type, itemsObject.format)
     if (!type) {
-      if (item.$ref) {
+      if (itemsObject.$ref) {
         // 递归处理Model
-        type = this.resolveReferenceType(item as OpenAPIV2.ReferenceObject) as string
+        type = this.resolveReferenceType(itemsObject as OpenAPIV2.ReferenceObject) as string
       }
     }
 
-    if (item.items) {
-      const itemsType = this.resolveItemsType(item.items)
+    if (itemsObject.items) {
+      const itemsType = this.resolveItemsType(itemsObject.items)
       type = `${type}<${itemsType}>`
     }
 
@@ -744,7 +760,7 @@ export class CodeGen {
       fs.mkdirSync(apisDir, { recursive: true })
     }
 
-    const fileOptions = { encoding: 'utf-8' }
+    const fileOptions = { encoding: 'utf-8' as BufferEncoding }
     const apiTemplatePath = path.join(this.#config.templateDir, 'api.mustache')
     if (!fs.existsSync(apiTemplatePath)) {
       throw new Error(`[ERROR]: 模版文件 ${apiTemplatePath} 不存在`)
@@ -796,7 +812,7 @@ export class CodeGen {
       fs.mkdirSync(modelsDir, { recursive: true })
     }
 
-    const fileOptions = { encoding: 'utf-8' }
+    const fileOptions = { encoding: 'utf-8' as BufferEncoding }
     const modelTemplatePath = path.join(this.#config.templateDir, 'model.mustache')
     if (!fs.existsSync(modelTemplatePath)) {
       throw new Error(`[ERROR]: 模版文件 ${modelTemplatePath} 不存在`)

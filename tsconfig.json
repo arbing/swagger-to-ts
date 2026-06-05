@@ -2,7 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "outDir": "lib",
-    "target": "es6",
+    "target": "es2022",
     "sourceMap": true,
     "declaration": true,
     "lib": ["esnext", "dom"],

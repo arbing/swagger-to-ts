@@ -1,13 +1,16 @@
-name: CI
+name: Publish
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
-  test:
+  publish-npm:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,8 +22,8 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          registry-url: https://registry.npmjs.org/
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: npm publish --provenance --access public --registry=https://registry.npmjs.org/
