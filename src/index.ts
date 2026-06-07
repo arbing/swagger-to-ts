@@ -4,6 +4,7 @@ import chalk from 'chalk'
 import { program } from 'commander'
 import path from 'path'
 import { CodeGen, GenConfig, defaultConfig } from './CodeGen'
+import { loadConfig } from './config'
 
 async function main() {
   try {
@@ -26,7 +27,7 @@ async function main() {
 
     let genConfig: GenConfig = defaultConfig
     if (options.configPath) {
-      genConfig = require(path.join(process.cwd(), options.configPath))
+      genConfig = loadConfig(options.configPath)
     } else {
       genConfig = {
         docUrl: options.docUrl,
