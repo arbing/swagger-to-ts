@@ -73,4 +73,4 @@ pnpm build
 
 ## Release
 
-Publishing is handled by GitHub Actions with npm Trusted Publisher. Create a GitHub Release after npm has trusted publishing configured for this repository.
+Publishing is handled by GitHub Actions with npm Trusted Publisher. Push a version tag like `v1.5.0`, or run the Publish workflow manually with a tag input. The workflow publishes to npm first, then creates the GitHub Release after npm publish succeeds.
