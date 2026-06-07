@@ -6,6 +6,7 @@ import { OpenAPIV2, IJsonSchema } from 'openapi-types'
 import Mustache from 'mustache'
 import _ from 'lodash'
 import axios from 'axios'
+import { convertOpenApi3ToSwagger2 } from './openapi'
 
 export interface GenConfig {
   /**
@@ -256,14 +257,7 @@ export class CodeGen {
       fs.writeFileSync(outputPath, JSON.stringify(apiDocsJson, undefined, 2), fileOptions)
 
       if (docVersion.startsWith('3.')) {
-        const ApiSpecConverter = require('api-spec-converter')
-        const converted = await ApiSpecConverter.convert({
-          from: 'openapi_3',
-          to: 'swagger_2',
-          source: outputPath,
-        })
-        const swagger2Json = converted.stringify()
-        fs.writeFileSync(outputPath, JSON.stringify(JSON.parse(swagger2Json), undefined, 2), fileOptions)
+        fs.writeFileSync(outputPath, JSON.stringify(convertOpenApi3ToSwagger2(apiDocsJson), undefined, 2), fileOptions)
       }
 
       const doc = await SwaggerParser.parse(outputPath)
