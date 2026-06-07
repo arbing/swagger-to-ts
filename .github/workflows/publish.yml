@@ -1,20 +1,30 @@
 name: Publish
 
 on:
-  release:
-    types:
-      - published
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to publish, for example v1.5.0
+        required: true
+        type: string
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
+    env:
+      TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG_NAME }}
       - uses: pnpm/action-setup@v4
         with:
           version: 10.34.1
@@ -27,3 +37,15 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: npm publish --provenance --access public --registry=https://registry.npmjs.org/
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${TAG_NAME}" > /dev/null 2>&1; then
+            echo "GitHub Release ${TAG_NAME} already exists."
+            exit 0
+          fi
+
+          gh release create "${TAG_NAME}" \
+            --title "${TAG_NAME}" \
+            --generate-notes
