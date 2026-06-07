@@ -108,4 +108,113 @@ describe('CodeGen', () => {
     expect(resultText).toContain('export interface Result<T>')
     expect(resultText).toContain('data?: T')
   })
+
+  it('generates apis and models from an OpenAPI 3 file', async () => {
+    const tempDir = createTempDir()
+    const docPath = path.join(tempDir, 'openapi.json')
+    const outputDir = path.join(tempDir, 'output')
+
+    fs.writeFileSync(
+      docPath,
+      JSON.stringify({
+        openapi: '3.0.1',
+        info: {
+          title: 'Role API',
+          version: '1.0.0',
+        },
+        paths: {
+          '/sys/role/list': {
+            post: {
+              summary: 'List roles',
+              parameters: [
+                {
+                  name: 'pageNo',
+                  in: 'query',
+                  schema: {
+                    type: 'integer',
+                  },
+                },
+              ],
+              requestBody: {
+                required: true,
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: '#/components/schemas/RoleQuery',
+                    },
+                  },
+                },
+              },
+              responses: {
+                200: {
+                  description: 'ok',
+                  content: {
+                    'application/json': {
+                      schema: {
+                        $ref: '#/components/schemas/RolePage',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        components: {
+          schemas: {
+            RoleQuery: {
+              type: 'object',
+              required: ['name'],
+              properties: {
+                name: {
+                  type: 'string',
+                },
+              },
+            },
+            RolePage: {
+              type: 'object',
+              properties: {
+                records: {
+                  type: 'array',
+                  items: {
+                    $ref: '#/components/schemas/Role',
+                  },
+                },
+              },
+            },
+            Role: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'integer',
+                },
+              },
+            },
+          },
+        },
+      }),
+    )
+
+    await CodeGen.create({
+      docUrl: docPath,
+      docVersion: '3.0.1',
+      baseName: '',
+      baseUrl: '/api',
+      templateDir: path.join(process.cwd(), 'template'),
+      outputDir,
+      paths: ['/sys/role/list'],
+      excludePaths: ['exportXls'],
+      apiCut: [],
+      pathReplace: [],
+    }).gen()
+
+    const apiText = fs.readFileSync(path.join(outputDir, 'role.ts'), 'utf-8')
+    const rolePageText = fs.readFileSync(path.join(outputDir, 'models', 'RolePage.ts'), 'utf-8')
+
+    expect(apiText).toContain('export function api_sys_role_list')
+    expect(apiText).toContain('params?: models.SysRoleListPostParams')
+    expect(apiText).toContain('data: models.RoleQuery')
+    expect(apiText).toContain('post<models.RolePage>')
+    expect(rolePageText).toContain('records?: Array<models.Role>')
+  })
 })
