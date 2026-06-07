@@ -5,9 +5,7 @@ import SwaggerParser from '@apidevtools/swagger-parser'
 import { OpenAPIV2, IJsonSchema } from 'openapi-types'
 import Mustache from 'mustache'
 import _ from 'lodash'
-import ApiSpecConverter from 'api-spec-converter'
 import axios from 'axios'
-import URI from 'urijs'
 
 export interface GenConfig {
   /**
@@ -208,24 +206,29 @@ export class CodeGen {
   }
 
   private async fetchJsonText(pathOrUrl: string) {
-    try {
-      if (fs.existsSync(pathOrUrl)) {
-        return fs.readFileSync(pathOrUrl, { encoding: 'utf-8' })
-      }
-    } catch (e) {}
-
-    const uri = new URI(pathOrUrl)
-    if (uri.is('absolute')) {
-      const resp = await axios.get(this.#config.docUrl, { responseType: 'text' })
-      const text = resp.data
-      if (typeof text === 'object') {
-        return JSON.stringify(text, null, 2)
-      }
-      return text
-    } else if (uri.is('relative')) {
-      return fs.readFileSync(pathOrUrl, { encoding: 'utf-8' })
-    } else {
+    const text = pathOrUrl.trim()
+    if (text.startsWith('{') || text.startsWith('[')) {
       return pathOrUrl
+    }
+
+    if (this.isHttpUrl(pathOrUrl)) {
+      const resp = await axios.get(pathOrUrl, { responseType: 'text' })
+      const data = resp.data
+      if (typeof data === 'object') {
+        return JSON.stringify(data, null, 2)
+      }
+      return data
+    }
+
+    return fs.readFileSync(pathOrUrl, { encoding: 'utf-8' })
+  }
+
+  private isHttpUrl(value: string) {
+    try {
+      const url = new URL(value)
+      return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch (error) {
+      return false
     }
   }
 
@@ -253,6 +256,7 @@ export class CodeGen {
       fs.writeFileSync(outputPath, JSON.stringify(apiDocsJson, undefined, 2), fileOptions)
 
       if (docVersion.startsWith('3.')) {
+        const ApiSpecConverter = require('api-spec-converter')
         const converted = await ApiSpecConverter.convert({
           from: 'openapi_3',
           to: 'swagger_2',
