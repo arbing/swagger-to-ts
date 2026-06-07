@@ -23,10 +23,10 @@ pnpm add -D swagger-to-ts
 swagger-to-ts --docUrl https://swagger/v2/api-docs --baseUrl /api --paths /pets,/users --outputDir ./dist
 ```
 
-Or use a config file:
+Or use a JSON/JSONC config file:
 
 ```bash
-swagger-to-ts --configPath ./codegen.config.json
+swagger-to-ts --configPath ./.vscode/codegen.json
 ```
 
 ```json
@@ -49,7 +49,7 @@ swagger-to-ts --configPath ./codegen.config.json
 
 | Option               | Description                                                                |
 | -------------------- | -------------------------------------------------------------------------- |
-| `-c, --configPath`   | Config file path, for example `./codegen.config.json`                      |
+| `-c, --configPath`   | JSON/JSONC config file path, for example `./.vscode/codegen.json`          |
 | `-d, --docUrl`       | Swagger or OpenAPI document URL/file path                                  |
 | `-n, --baseName`     | Service name prefix                                                        |
 | `-b, --baseUrl`      | Request path prefix                                                        |
