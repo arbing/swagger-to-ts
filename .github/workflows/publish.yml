@@ -36,16 +36,4 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm build
-      - run: npm publish --provenance --access public --registry=https://registry.npmjs.org/
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh release view "${TAG_NAME}" > /dev/null 2>&1; then
-            echo "GitHub Release ${TAG_NAME} already exists."
-            exit 0
-          fi
-
-          gh release create "${TAG_NAME}" \
-            --title "${TAG_NAME}" \
-            --generate-notes
+      - run: npm publish --access public --tag ${{ env.TAG_NAME }}
