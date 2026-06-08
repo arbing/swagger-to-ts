@@ -4,7 +4,7 @@
   "description": "Generate typescript services and models from Swagger",
   "main": "./lib/index.js",
   "bin": {
-    "swagger-to-ts": "./lib/index.js"
+    "swagger-to-ts": "lib/index.js"
   },
   "files": [
     "lib",
